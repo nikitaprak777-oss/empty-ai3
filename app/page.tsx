@@ -27,7 +27,7 @@ const STATE_LABELS: Record<State, string> = {
   neutral:    'neutral',
 };
 
-const USER_ID = 'user_001'; // hardcoded for MVP; extend with auth later
+const USER_ID = 'user_001'; 
 
 export default function Home() {
   const [messages, setMessages]   = useState<Message[]>([]);
@@ -40,12 +40,10 @@ export default function Home() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -69,7 +67,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/route', { // ИСПРАВЛЕНО: Запрос идет на роут в корне
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, userId: USER_ID }),
@@ -90,7 +88,7 @@ export default function Home() {
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'ai',
-        text: '...',
+        text: 'Ошибка отправки запроса.',
         ts: Date.now(),
       }]);
     } finally {
@@ -157,7 +155,6 @@ export default function Home() {
           }}>
             EMPTY
           </span>
-          {/* State dot */}
           <span style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -252,7 +249,7 @@ export default function Home() {
         padding: '24px 24px 8px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: 16,
       }}>
 
         {/* Empty state */}
@@ -289,148 +286,69 @@ export default function Home() {
         {loading && (
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '10px 0 4px',
+            gap: 4,
+            padding: '12px 16px',
+            color: '#71717a',
+            fontSize: 13,
+            fontFamily: "'JetBrains Mono', monospace' "
           }}>
-            <TypingDots />
+            <span>typing...</span>
           </div>
         )}
-
+        
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Input ───────────────────────────────────────────────────────────── */}
+      {/* ── Input Box ───────────────────────────────────────────────────────── */}
       <div style={{
-        padding: '12px 16px 20px',
-        borderTop: '1px solid #1c1c1f',
-        flexShrink: 0,
+        padding: '0 24px 24px',
+        background: 'transparent',
       }}>
         <div style={{
+          position: 'relative',
           display: 'flex',
           alignItems: 'flex-end',
-          gap: 8,
-          background: '#111113',
-          border: '1px solid #27272a',
-          borderRadius: 14,
-          padding: '10px 12px',
-          transition: 'border-color 0.15s',
+          background: '#141416',
+          border: '1px solid #232326',
+          borderRadius: 12,
+          padding: '10px 14px',
         }}>
           <textarea
             ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder="say something..."
             rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Type a message..."
             style={{
               flex: 1,
               background: 'transparent',
               border: 'none',
-              outline: 'none',
+              resize: 'none',
               color: '#fafafa',
               fontSize: 14,
-              lineHeight: 1.5,
-              resize: 'none',
-              fontFamily: "'Inter', sans-serif",
-              caretColor: '#a78bfa',
+              outline: 'none',
+              fontFamily: 'inherit',
+              lineHeight: '20px',
               maxHeight: 140,
-              overflowY: 'auto',
             }}
           />
           <button
             onClick={send}
             disabled={!input.trim() || loading}
             style={{
-              flexShrink: 0,
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: input.trim() && !loading ? '#a78bfa' : '#27272a',
+              background: '#fafafa',
+              color: '#0a0a0a',
               border: 'none',
-              cursor: input.trim() && !loading ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 0.15s',
-              marginBottom: 1,
+              borderRadius: 8,
+              padding: '6px 12px',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              opacity: input.trim() && !loading ? 1 : 0.4,
+              transition: 'opacity 0.15s',
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            Send
           </button>
         </div>
-        <div style={{
-          textAlign: 'center',
-          marginTop: 8,
-          fontSize: 10,
-          color: '#3f3f46',
-          fontFamily: "'JetBrains Mono', monospace",
-          letterSpacing: '0.06em',
-        }}>
-          shift+enter for newline
-        </div>
-      </div>
-    </main>
-  );
-}
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
-
-function MessageBubble({ message }: { message: Message }) {
-  const isUser = message.role === 'user';
-
-  return (
-    <div style={{
-      display: 'flex',
-      justifyContent: isUser ? 'flex-end' : 'flex-start',
-      marginBottom: 2,
-    }}>
-      <div style={{
-        maxWidth: '78%',
-        padding: isUser ? '9px 14px' : '9px 0',
-        borderRadius: isUser ? 14 : 0,
-        background: isUser ? '#1e1b2e' : 'transparent',
-        color: isUser ? '#e8e8f0' : '#a1a1aa',
-        fontSize: 14,
-        lineHeight: 1.55,
-        fontWeight: isUser ? 400 : 300,
-        border: isUser ? '1px solid #2d2a42' : 'none',
-        fontFamily: isUser ? "'Inter', sans-serif" : "'Inter', sans-serif",
-        letterSpacing: isUser ? 'normal' : '0.01em',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-      }}>
-        {message.text}
-      </div>
-    </div>
-  );
-}
-
-function TypingDots() {
-  return (
-    <div style={{ display: 'flex', gap: 4, paddingLeft: 2 }}>
-      {[0, 1, 2].map(i => (
-        <span
-          key={i}
-          style={{
-            width: 4,
-            height: 4,
-            borderRadius: '50%',
-            background: '#3f3f46',
-            display: 'inline-block',
-            animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes pulse {
-          0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
-          40% { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-    </div>
-  );
-}
