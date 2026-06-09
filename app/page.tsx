@@ -356,3 +356,39 @@ export default function Home() {
     </main>
   );
 }
+function MessageBubble({ message }: { message: any }) {
+  const isUser = message.role === 'user';
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: isUser ? 'flex-end' : 'flex-start',
+      width: '100%',
+    }}>
+      <div style={{
+        maxWidth: '85%',
+        padding: '10px 14px',
+        borderRadius: 12,
+        fontSize: 14,
+        lineHeight: '20px',
+        background: isUser ? '#27272a' : 'transparent',
+        color: isUser ? '#fafafa' : '#e4e4e7',
+        whiteSpace: 'pre-wrap',
+      }}>
+        {message.text}
+      </div>
+      {!isUser && message.state && (
+        <span style={{
+          fontSize: 10,
+          color: message.state === 'calm' ? '#34d399' : message.state === 'anxious' ? '#f87171' : message.state === 'reflective' ? '#a78bfa' : '#71717a',
+          fontFamily: "'JetBrains Mono', monospace",
+          marginTop: 4,
+          paddingLeft: 4,
+          opacity: 0.7,
+        }}>
+          [{message.state}]
+        </span>
+      )}
+    </div>
+  );
+}
