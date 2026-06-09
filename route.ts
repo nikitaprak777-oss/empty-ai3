@@ -1,14 +1,13 @@
-// app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getMemory,
   saveMemory,
   detectState,
   compressMemory,
-} from '@/lib/memory';
-import { EMPTY_SYSTEM_PROMPT } from '@/lib/systemPrompt';
+} from './lib/memory'; // ИСПРАВЛЕНО: импорт из соседней папки lib
+import { EMPTY_SYSTEM_PROMPT } from './lib/systemPrompt'; // ИСПРАВЛЕНО: импорт из соседней папки lib
 
-const COMPRESS_EVERY = 6; // compress memory every N user messages
+const COMPRESS_EVERY = 6; 
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -23,11 +22,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Empty message' }, { status: 400 });
   }
 
-  // ── Load memory & detect state ──────────────────────────────────────────────
   const memory = getMemory(userId);
   const state = detectState(message);
 
-  // ── Build user content block ────────────────────────────────────────────────
   const memoryBlock = memory.summary
     ? `MEMORY: ${memory.summary}\nPATTERNS: ${memory.patterns.join(', ')}`
     : 'MEMORY: (none yet)';
@@ -36,11 +33,10 @@ export async function POST(req: NextRequest) {
 STATE: ${state}
 MESSAGE: ${message}`;
 
-  // ── Call Claude ─────────────────────────────────────────────────────────────
   let aiText = '...';
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://anthropic.com', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,18 +59,18 @@ MESSAGE: ${message}`;
     aiText = '...';
   }
 
-  // ── Update message count & maybe compress ────────────────────────────────────
   const updatedCount = memory.messageCount + 1;
 
   if (updatedCount >= COMPRESS_EVERY) {
-    // fire-and-forget compression
+    const geminiKey = process.env.GEMINI_API_KEY || '';
+
     compressMemory(
       userId,
       [
         { role: 'user', content: message },
         { role: 'assistant', content: aiText },
       ],
-      apiKey,
+      geminiKey, 
     );
   } else {
     saveMemory({ ...memory, messageCount: updatedCount });
