@@ -312,7 +312,7 @@ export default function Home() {
           border: '1px solid #232326',
           borderRadius: 12,
           padding: '10px 14px',
-         }}>
+        }}>
           <textarea
             ref={inputRef}
             rows={1}
@@ -353,7 +353,3 @@ export default function Home() {
           </button>
         </div>
       </div>
-    </main>
-  );
-}
-
