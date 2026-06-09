@@ -67,7 +67,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const res = await fetch('/route', { // ИСПРАВЛЕНО: Запрос идет на роут в корне
+      const res = await fetch('/', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, userId: USER_ID }),
@@ -290,7 +290,7 @@ export default function Home() {
             padding: '12px 16px',
             color: '#71717a',
             fontSize: 13,
-            fontFamily: "'JetBrains Mono', monospace' "
+            fontFamily: "'JetBrains Mono', monospace"
           }}>
             <span>typing...</span>
           </div>
@@ -312,7 +312,7 @@ export default function Home() {
           border: '1px solid #232326',
           borderRadius: 12,
           padding: '10px 14px',
-        }}>
+         }}>
           <textarea
             ref={inputRef}
             rows={1}
@@ -352,3 +352,8 @@ export default function Home() {
             Send
           </button>
         </div>
+      </div>
+    </main>
+  );
+}
+
