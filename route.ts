@@ -4,10 +4,10 @@ import {
   saveMemory,
   detectState,
   compressMemory,
-} from './lib/memory'; // ИСПРАВЛЕНО: импорт из соседней папки lib
-import { EMPTY_SYSTEM_PROMPT } from './lib/systemPrompt'; // ИСПРАВЛЕНО: импорт из соседней папки lib
+} from './lib/memory'; 
+import { EMPTY_SYSTEM_PROMPT } from './lib/systemPrompt'; 
 
-const COMPRESS_EVERY = 6; 
+const COMPRESS_EVERY = 6; // Сжимать память каждые 6 сообщений
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -22,9 +22,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Empty message' }, { status: 400 });
   }
 
+  // ── Загрузка памяти и определение состояния пользователя ───────────────────
   const memory = getMemory(userId);
   const state = detectState(message);
 
+  // ── Формирование контекста памяти для Claude ───────────────────────────────
   const memoryBlock = memory.summary
     ? `MEMORY: ${memory.summary}\nPATTERNS: ${memory.patterns.join(', ')}`
     : 'MEMORY: (none yet)';
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
 STATE: ${state}
 MESSAGE: ${message}`;
 
+  // ── Запрос к модели Claude ──────────────────────────────────────────────────
   let aiText = '...';
 
   try {
@@ -52,6 +55,8 @@ MESSAGE: ${message}`;
     });
 
     const data = await response.json();
+    
+    // ИСПРАВЛЕНО: Убрана синтаксическая ошибка с двойными точками `?.?.`
     const raw = data?.content?.[0]?.text ?? '{"text":"..."}';
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
     aiText = parsed.text ?? '...';
@@ -59,11 +64,14 @@ MESSAGE: ${message}`;
     aiText = '...';
   }
 
+  // ── Обновление счетчика сообщений и вызов сжатия памяти ────────────────────
   const updatedCount = memory.messageCount + 1;
 
   if (updatedCount >= COMPRESS_EVERY) {
+    // Получаем ключ Gemini конкретно для фонового сжатия памяти
     const geminiKey = process.env.GEMINI_API_KEY || '';
 
+    // Запуск процесса сжатия
     compressMemory(
       userId,
       [
